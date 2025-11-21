@@ -35,8 +35,11 @@ class ProxyChecker:
             return False
 
         normalized = self._normalize_proxy(parsed)
+
         with self._lock:
-            if normalized in self._valid or normalized in self._invalid or normalized in self._pending:
+            if normalized in self._valid or \
+                normalized in self._invalid or \
+                normalized in self._pending:
                 return False
             self._pending.add(normalized)
             if parsed.username and parsed.password:
@@ -181,20 +184,21 @@ class ProxyChecker:
             return None
 
     @staticmethod
+    def _split_proxy(proxy: str) -> tuple[str,str, int]:
+        parsed: ParseResult = urlparse(proxy)
+        scheme: str = parsed.scheme.lower() if parsed.scheme is not None else ""
+        host: str = parsed.hostname.lower() if parsed.hostname is not None else ""
+        port: int = int(parsed.port or 0)
+        return scheme, host, port
+
+    @staticmethod
     def _normalize_proxy(parsed: ParseResult) -> str:
-        scheme: str  = parsed.scheme.lower()
+        scheme: str  = parsed.scheme.lower() if parsed.scheme is not None else ""
         host: str = parsed.hostname.lower() if parsed.hostname else ""
         port: int = int(parsed.port or 0)
 
         return f"{scheme}://{host}:{port}"
 
-    @staticmethod
-    def _split_proxy(proxy: str) -> tuple[str,str, int]:
-        parsed: ParseResult = urlparse(proxy)
-        scheme: str = parsed.scheme.lower() or ""
-        host: str = parsed.hostname.lower() or ""
-        port: int = int(parsed.port or 0)
-        return scheme, host, port
 
     def _check_http_proxy(
         self,

@@ -2,10 +2,28 @@
 from libs.checker import ProxyChecker
 from libs.downloader import ProxyDownloader
 
+
+def read_sources() -> dict[str, list[str]]:
+    results:  dict[str, list[str]] = {"socks5": [], "https": []}
+
+    with open("sources.txt", "r") as file:
+        line = file.readline()
+        source_url, source_type = line.strip().split(",")
+        while line:
+            source_url, source_type = line.strip().split(",")
+            results[source_type].append(source_url)
+            line = file.readline()
+    return results
+
+
 def main():
+    sources = read_sources()
     downloader = ProxyDownloader()
-    downloader.add("https://raw.githubusercontent.com/vakhov/fresh-proxy-list/refs/heads/master/socks5.txt")
-    downloader.add("https://raw.githubusercontent.com/vakhov/fresh-proxy-list/refs/heads/master/https.txt")
+    for source in sources:
+        print(f"Adding new source type: {source}")
+        for s in sources[source]:
+            print(f"Add source {s}")
+            downloader.add(s)
 
     threads = downloader.run(thread_count=1)
     for t in threads:
